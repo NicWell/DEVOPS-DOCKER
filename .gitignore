@@ -38,11 +38,17 @@ coverage.xml
 *.db
 *.sqlite3
 
+# Arquivos de Banco de Dados e Backups (PostgreSQL, etc.)
+*.sql
+*.dump
+*.backup
+
 # Arquivos de segredos e variáveis de ambiente
 # NUNCA comite senhas, tokens ou chaves de API!
 *.env
 .env.*
 !.env.example
+local_settings.py
 
 # Arquivos gerados pelo sistema operacional
 .DS_Store
