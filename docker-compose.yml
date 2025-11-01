@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    env_file:
+      - .env
+    environment:
+      # POSTGRES_USER & POSTGRES_PASSWORD fornecem superuser (não usar como usuário da app)
+      POSTGRES_USER: "${POSTGRES_SUPERUSER}"
+      POSTGRES_PASSWORD: "${POSTGRES_SUPERPASS}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      # variáveis para o script init
+      APP_DB_USER: "${APP_DB_USER}"
+      APP_DB_PASSWORD: "${APP_DB_PASSWORD}"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPERUSER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - biblioteca_net
+
+  app:
+    build: .
+    restart: always
+    env_file:
+      - .env
+    environment:
+      # A app usa um usuário não-superuser (APP_DB_USER)
+      DATABASE_URL: "postgresql://${APP_DB_USER}:${APP_DB_PASSWORD}@db:5432/${POSTGRES_DB}"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    networks:
+      - biblioteca_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/livros"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  pgdata:
+
+networks:
+  biblioteca_net:
+    driver: bridge
