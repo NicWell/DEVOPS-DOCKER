@@ -82,7 +82,7 @@ APP_DB_PASSWORD=secret
 
 ---
 
-## ▶ Como Executar a Aplicação
+## Como Executar a Aplicação
 
 Com o Docker e o Docker Compose instalados e o arquivo `.env` configurado, executar o projeto é muito simples.
 
