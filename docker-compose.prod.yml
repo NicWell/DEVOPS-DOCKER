@@ -27,10 +27,7 @@ services:
       - biblioteca_net
 
   app:
-    # AQUI ESTÁ A MUDANÇA PRINCIPAL
-    # Substitua "seu-usuario" pelo seu usuário do Docker Hub
-    # Substitua "biblioteca-api" pelo nome que você quer dar à imagem (ou o nome do seu repositório no Docker Hub)
-    image: seu-usuario-dockerhub/biblioteca-api:latest
+    image: nicwell/biblioteca-api:latest
     
     restart: always
     env_file:
