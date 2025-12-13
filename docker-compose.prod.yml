@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    # Em produção, ele vai ler o arquivo .env que você criará no servidor
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: "${POSTGRES_SUPERUSER}"
+      POSTGRES_PASSWORD: "${POSTGRES_SUPERPASS}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      APP_DB_USER: "${APP_DB_USER}"
+      APP_DB_PASSWORD: "${APP_DB_PASSWORD}"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # ATENÇÃO: O Git Pull no servidor trará esse arquivo init-db.sh
+      # Certifique-se de que ele foi enviado (não está no .gitignore)
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPERUSER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - biblioteca_net
+
+  app:
+    # AQUI ESTÁ A MUDANÇA PRINCIPAL
+    # Substitua "seu-usuario" pelo seu usuário do Docker Hub
+    # Substitua "biblioteca-api" pelo nome que você quer dar à imagem (ou o nome do seu repositório no Docker Hub)
+    image: seu-usuario-dockerhub/biblioteca-api:latest
+    
+    restart: always
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgresql://${APP_DB_USER}:${APP_DB_PASSWORD}@db:5432/${POSTGRES_DB}"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    networks:
+      - biblioteca_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/livros"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+
+networks:
+  biblioteca_net:
+    driver: bridge
