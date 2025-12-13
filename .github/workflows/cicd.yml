@@ -1,0 +1,77 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  # JOBS DE TESTE E BUILD
+  build-test-push:
+    runs-on: ubuntu-latest
+    steps:
+    
+    # 1. Baixar o código
+    - name: Checkout do código
+      uses: actions/checkout@v3
+
+    # 2. Preparar Python para os testes
+    - name: Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    # 3. Rodar os Testes (Parte da Etapa 1)
+    - name: Instalar dependências e Testar
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        # Instala python-dotenv caso falte no requirements
+        pip install python-dotenv 
+        # Roda os testes
+        pytest
+
+    # 4. Login no Docker Hub (Parte da Etapa 5)
+    - name: Login no Docker Hub
+      # Só roda se os testes passaram
+      if: success() 
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    # 5. Build e Envio da Imagem (Parte da Etapa 3)
+    - name: Build e Push da Imagem
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: |
+          nicwell/biblioteca-api:latest
+          nicwell/biblioteca-api:${{ github.sha }}
+
+  # JOB DE DEPLOY (Se você ainda não tiver Servidor, isso vai falhar, mas o build acima passa)
+  deploy:
+    needs: build-test-push
+    runs-on: ubuntu-latest
+    # Se você ainda não configurou as Secrets HOST e KEY, comente as linhas abaixo
+    # ou o workflow dará erro nesta etapa.
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: 22
+          script: |
+            # Entra na pasta do projeto (ajuste o nome se for diferente)
+            cd biblioteca-api 
+            
+            # Baixa novo código
+            git pull origin main
+            
+            # Baixa nova imagem
+            docker compose -f docker-compose.prod.yml pull
+            
+            # Sobe a nova versão
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
