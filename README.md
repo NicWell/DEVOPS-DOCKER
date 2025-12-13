@@ -1,3 +1,18 @@
+[![CI/CD Pipeline](https://github.com/NicWell/DEVOPS-DOCKER/actions/workflows/cicd.yml/badge.svg)](https://github.com/NicWell/DEVOPS-DOCKER/actions/workflows/cicd.yml)
+
+# CI/CD e Deploy
+Pipeline CI/CD
+ O projeto conta com automação via GitHub Actions que realiza:
+  1. Instalação de dependências e execução de Testes Unitários (Pytest).
+  2. Build da imagem Docker.
+  3. Push da imagem para o Docker Hub (nicwell/biblioteca-api).
+  3. Variáveis de Ambiente (Secrets)
+Para o pipeline funcionar, as seguintes Secrets foram configuradas no GitHub:
+  1. DOCKER_USERNAME: Usuário do Docker Hub.
+  2. DOCKER_PASSWORD: Senha/Token do Docker Hub.
+  3. (HOST, USERNAME e KEY estão preparados para o deploy via SSH).
+
+
 # DEVOPS-DOCKER
 ATIVIDADE SUBMETIDA A DISCIPLINA DE DEVOPS
 
