@@ -49,29 +49,28 @@ jobs:
           nicwell/biblioteca-api:latest
           nicwell/biblioteca-api:${{ github.sha }}
 
-  # JOB DE DEPLOY (Se você ainda não tiver Servidor, isso vai falhar, mas o build acima passa)
-  #deploy:
-  #  needs: build-test-push
-  #  runs-on: ubuntu-latest
-  #  # Se você ainda não configurou as Secrets HOST e KEY, comente as linhas abaixo
-    # ou o workflow dará erro nesta etapa.
-  #  steps:
-  #    - name: Deploy via SSH
-  #      uses: appleboy/ssh-action@v0.1.6
-  #      with:
-  #        host: ${{ secrets.HOST }}
-  #        username: ${{ secrets.USERNAME }}
-  #        key: ${{ secrets.KEY }}
-  #        port: 22
-  #        script: |
-  #          # Entra na pasta do projeto (ajuste o nome se for diferente)
-  #          cd biblioteca-api 
-  #          
-            # Baixa novo código
-  #          git pull origin main
+  # JOB DE DEPLOY 
+  deploy:
+    needs: build-test-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: 22
+          script: |
+            # Entra na pasta do projeto
+            # Nota: Ajustei para o nome que apareceu no seu log do terminal
+            cd DEVOPS-DOCKER 
             
-            # Baixa nova imagem
-  #          docker compose -f docker-compose.prod.yml pull
+            # Baixa novo código do GitHub
+            git pull origin main
             
-            # Sobe a nova versão
-  #          docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            # Baixa nova imagem do Docker Hub
+            docker compose -f docker-compose.prod.yml pull
+            
+            # Sobe a nova versão (recriando apenas o necessário)
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
